@@ -54,13 +54,13 @@ def main():
         if query == "/help":
             console.print(
                 Panel(
-                    "[bold]/models[/bold]  - 列出可用模型\n"
-                    "[bold]/model[/bold] [dim]<id>[/dim] - 切換模型\n"
+                    "[bold]/models[/bold]  - 列出可用模型（範例清單）\n"
+                    "[bold]/model[/bold] [dim]<provider:model>[/dim] - 切換模型（例如 openai:gpt-4o-mini）\n"
                     "[bold]/quit[/bold]   - 離開程式\n"
                     "[bold]/help[/bold]   - 顯示此說明\n\n"
                     "直接輸入任務即可開始研究，例如:\n"
-                    '  "給我台積電一月的財務報告 並判斷市場情緒"\n'
-                    '  "比較 台積電 和 聯發科 的財務指標 誰更有可能具備更多的漲勢"',
+                    '  "整理台積電近期重大事件與財務重點，並判斷市場情緒"\n'
+                    '  "比較 台積電 和 聯發科 的近期新聞情緒與財務指標差異"',
                     title="Help",
                 )
             )
