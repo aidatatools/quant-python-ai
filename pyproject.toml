@@ -1,0 +1,7 @@
+[project]
+name = "quant-python-ai"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.13"
+dependencies = ["rich", "prompt-toolkit", "python-dotenv", "tavily-python", "openai"]
