@@ -26,6 +26,10 @@ quant-python-ai/
 └── .env                             # 你的 API Keys（不進版控）
 ```
 
+## 展示
+
+![Demo](gif-video/quant-python-ai-demo.gif)
+
 ## 安裝
 
 ### 前置需求
