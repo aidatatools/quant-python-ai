@@ -109,15 +109,47 @@ class LLMClient:
         # Re-init for provider change.
         self.__init__(provider=new_provider, model=new_model, temperature=self.temperature, max_tokens=self.max_tokens)
 
-    def chat(self, *, system: str, user: str) -> str:
-        """Send a system + user message and return the assistant reply."""
-        response: Any = self._client.chat.completions.create(
-            model=self.model,
-            temperature=self.temperature,
-            max_tokens=self.max_tokens,
-            messages=[
-                {"role": "system", "content": system},
-                {"role": "user", "content": user},
-            ],
-        )
-        return response.choices[0].message.content or ""
+    def chat(
+        self,
+        *,
+        messages: list[dict] | None = None,
+        system: str | None = None,
+        user: str | None = None,
+        tools: list[dict] | None = None,
+    ) -> Any:
+        """Send a list of messages or system+user messages and return the response object."""
+        model_is_o_series = self.model.startswith(("o1-", "o3-", "openai/o1-", "openai/o3-"))
+        model_is_gpt5 = "gpt-5" in self.model
+        
+        # Determine actual messages to send
+        if messages:
+            final_messages = messages
+        else:
+            final_messages = []
+            if system:
+                final_messages.append({"role": "system", "content": system})
+            if user:
+                final_messages.append({"role": "user", "content": user})
+
+        # Base arguments
+        kwargs: dict = {
+            "model": self.model,
+            "messages": final_messages,
+        }
+
+        # Handle max_tokens vs max_completion_tokens vs none
+        use_completion_tokens = model_is_o_series or model_is_gpt5
+        
+        if use_completion_tokens:
+            kwargs["max_completion_tokens"] = self.max_tokens
+            # Reasoning/Latest flagships: temperature must be 1.0 or handled specifically
+            # Some O-series don't support temperature at all or require 1.0
+            kwargs["temperature"] = 1.0
+        else:
+            kwargs["max_tokens"] = self.max_tokens
+            kwargs["temperature"] = self.temperature
+
+        if tools:
+            kwargs["tools"] = tools
+
+        return self._client.chat.completions.create(**kwargs)
