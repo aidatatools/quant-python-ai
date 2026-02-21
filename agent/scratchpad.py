@@ -11,12 +11,17 @@ class Scratchpad:
         content: str | None = None,
         tool_calls: list | None = None,
         tool_call_id: str | None = None,
+        reasoning_content: str | None = None,
     ) -> None:
         msg: dict = {"role": role}
 
         # assistant messages MUST always have "content" key (even if None)
         if role == "assistant":
             msg["content"] = content or ""
+
+            # Kimi thinking 模式：保留 reasoning_content，否則下輪 API 呼叫會 400
+            if reasoning_content:
+                msg["reasoning_content"] = reasoning_content
 
             # Serialize tool_calls from SDK objects to plain dicts
             if tool_calls:

@@ -6,7 +6,7 @@ from typing import Any, Literal
 
 from openai import OpenAI
 
-ProviderName = Literal["openai", "openrouter"]
+ProviderName = Literal["openai", "openrouter", "moonshot"]
 
 
 @dataclass(frozen=True)
@@ -28,8 +28,13 @@ PROVIDERS: dict[ProviderName, ProviderSpec] = {
         name="openrouter",
         api_key_env="OPENROUTER_API_KEY",
         base_url="https://openrouter.ai/api/v1",
-        # OpenRouter model IDs are typically like: "openai/gpt-4o-mini"
         default_model="openai/gpt-4o-mini",
+    ),
+    "moonshot": ProviderSpec(
+        name="moonshot",
+        api_key_env="MOONSHOT_API_KEY",
+        base_url="https://api.moonshot.cn/v1",
+        default_model="kimi-k2.5",
     ),
 }
 
@@ -117,9 +122,15 @@ class LLMClient:
         user: str | None = None,
         tools: list[dict] | None = None,
     ) -> Any:
-        """Send a list of messages or system+user messages and return the response object."""
+        """Send messages to the LLM and return the response.
+
+        Returns:
+            openai.types.chat.ChatCompletion — 呼叫端應透過
+            `response.choices[0].message` 取得回覆內容。
+        """
         model_is_o_series = self.model.startswith(("o1-", "o3-", "openai/o1-", "openai/o3-"))
         model_is_gpt5 = "gpt-5" in self.model
+        model_is_kimi = self.provider == "moonshot" or "kimi" in self.model
         
         # Determine actual messages to send
         if messages:
@@ -139,12 +150,13 @@ class LLMClient:
 
         # Handle max_tokens vs max_completion_tokens vs none
         use_completion_tokens = model_is_o_series or model_is_gpt5
-        
+
         if use_completion_tokens:
             kwargs["max_completion_tokens"] = self.max_tokens
-            # Reasoning/Latest flagships: temperature must be 1.0 or handled specifically
-            # Some O-series don't support temperature at all or require 1.0
             kwargs["temperature"] = 1.0
+        elif model_is_kimi:
+            # Kimi K2 系列：不需要 temperature，使用 max_tokens
+            kwargs["max_tokens"] = self.max_tokens
         else:
             kwargs["max_tokens"] = self.max_tokens
             kwargs["temperature"] = self.temperature
