@@ -22,13 +22,13 @@ PROVIDERS: dict[ProviderName, ProviderSpec] = {
         name="openai",
         api_key_env="OPENAI_API_KEY",
         base_url=None,
-        default_model="gpt-4o-mini",
+        default_model="gpt-5-mini",
     ),
     "openrouter": ProviderSpec(
         name="openrouter",
         api_key_env="OPENROUTER_API_KEY",
         base_url="https://openrouter.ai/api/v1",
-        default_model="openai/gpt-4o-mini",
+        default_model="openai/gpt-5-mini",
     ),
     "moonshot": ProviderSpec(
         name="moonshot",
@@ -96,7 +96,7 @@ class LLMClient:
         self.max_tokens = (
             int(os.getenv("LLM_MAX_TOKENS"))
             if os.getenv("LLM_MAX_TOKENS") is not None
-            else (max_tokens if max_tokens is not None else 900)
+            else (max_tokens if max_tokens is not None else 8192)
         )
 
     def configure(self, *, provider: str | None = None, model: str | None = None) -> None:

@@ -31,7 +31,7 @@ BANNER = r"""
 
 def main():
     load_dotenv()
-    console.print(Panel(BANNER, style="bold cyan", subtitle="v0.1.0"))
+    console.print(Panel(BANNER, style="bold cyan", subtitle="v0.2.0"))
     console.print("[dim]輸入投資研究任務，或輸入 /help 查看指令、/quit 離開[/dim]\n")
     console.print("[dim]量化回測：/quant backtest <策略描述>　換股清單：/quant positions[/dim]\n")
 

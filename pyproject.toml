@@ -1,7 +1,7 @@
 [project]
 name = "quant-python-ai"
-version = "0.1.0"
-description = "Add your description here"
+version = "0.2.0"
+description = "Quant Python AI Agent"
 readme = "README.md"
 requires-python = ">=3.13"
 dependencies = [

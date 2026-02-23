@@ -130,11 +130,11 @@ class FinMindTool:
         """取得財務報表（IncomeStatement, BalanceSheet, CashFlows）。"""
         start_date = self._get_start_date(365 * 2) # 預設看兩年
         if statement_type == "IncomeStatement":
-            df = self.api.taiwan_stock_financial_statements(stock_id=stock_id, start_date=start_date)
+            df = self.api.taiwan_stock_financial_statement(stock_id=stock_id, start_date=start_date)
         elif statement_type == "BalanceSheet":
             df = self.api.taiwan_stock_balance_sheet(stock_id=stock_id, start_date=start_date)
         elif statement_type == "CashFlows":
-            df = self.api.taiwan_stock_cash_flows(stock_id=stock_id, start_date=start_date)
+            df = self.api.taiwan_stock_cash_flows_statement(stock_id=stock_id, start_date=start_date)
         else:
             return "錯誤：未知的報表類型。請使用 IncomeStatement, BalanceSheet 或 CashFlows。"
             
