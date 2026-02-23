@@ -73,8 +73,6 @@ class QuantPythonAgent:
         )
 
     def list_models(self) -> None:
-        # (保持原有的 list_models 邏輯，略作調整以符合現狀)
-        from agent.quant_python_agent import CURATED_MODELS
         table = Table(title="Available Models (examples)", show_header=True, header_style="bold cyan")
         table.add_column("ID")
         table.add_column("Description")
