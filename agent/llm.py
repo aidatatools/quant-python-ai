@@ -6,7 +6,7 @@ from typing import Any, Literal
 
 from openai import OpenAI
 
-ProviderName = Literal["openai", "openrouter"]
+ProviderName = Literal["openai", "openrouter", "moonshot"]
 
 
 @dataclass(frozen=True)
@@ -28,8 +28,13 @@ PROVIDERS: dict[ProviderName, ProviderSpec] = {
         name="openrouter",
         api_key_env="OPENROUTER_API_KEY",
         base_url="https://openrouter.ai/api/v1",
-        # OpenRouter model IDs are typically like: "openai/gpt-4o-mini"
         default_model="openai/gpt-4o-mini",
+    ),
+    "moonshot": ProviderSpec(
+        name="moonshot",
+        api_key_env="MOONSHOT_API_KEY",
+        base_url="https://api.moonshot.cn/v1",
+        default_model="kimi-k2.5",
     ),
 }
 
@@ -109,15 +114,54 @@ class LLMClient:
         # Re-init for provider change.
         self.__init__(provider=new_provider, model=new_model, temperature=self.temperature, max_tokens=self.max_tokens)
 
-    def chat(self, *, system: str, user: str) -> str:
-        """Send a system + user message and return the assistant reply."""
-        response: Any = self._client.chat.completions.create(
-            model=self.model,
-            temperature=self.temperature,
-            max_tokens=self.max_tokens,
-            messages=[
-                {"role": "system", "content": system},
-                {"role": "user", "content": user},
-            ],
-        )
-        return response.choices[0].message.content or ""
+    def chat(
+        self,
+        *,
+        messages: list[dict] | None = None,
+        system: str | None = None,
+        user: str | None = None,
+        tools: list[dict] | None = None,
+    ) -> Any:
+        """Send messages to the LLM and return the response.
+
+        Returns:
+            openai.types.chat.ChatCompletion — 呼叫端應透過
+            `response.choices[0].message` 取得回覆內容。
+        """
+        model_is_o_series = self.model.startswith(("o1-", "o3-", "openai/o1-", "openai/o3-"))
+        model_is_gpt5 = "gpt-5" in self.model
+        model_is_kimi = self.provider == "moonshot" or "kimi" in self.model
+        
+        # Determine actual messages to send
+        if messages:
+            final_messages = messages
+        else:
+            final_messages = []
+            if system:
+                final_messages.append({"role": "system", "content": system})
+            if user:
+                final_messages.append({"role": "user", "content": user})
+
+        # Base arguments
+        kwargs: dict = {
+            "model": self.model,
+            "messages": final_messages,
+        }
+
+        # Handle max_tokens vs max_completion_tokens vs none
+        use_completion_tokens = model_is_o_series or model_is_gpt5
+
+        if use_completion_tokens:
+            kwargs["max_completion_tokens"] = self.max_tokens
+            kwargs["temperature"] = 1.0
+        elif model_is_kimi:
+            # Kimi K2 系列：不需要 temperature，使用 max_tokens
+            kwargs["max_tokens"] = self.max_tokens
+        else:
+            kwargs["max_tokens"] = self.max_tokens
+            kwargs["temperature"] = self.temperature
+
+        if tools:
+            kwargs["tools"] = tools
+
+        return self._client.chat.completions.create(**kwargs)
